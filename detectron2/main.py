@@ -58,7 +58,7 @@ def get_balloon_dicts(img_dir):
 def set_train_cfg():
     config = get_cfg()
     config.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
-    config.DATASETS.TRAIN = ("/input/balloon_train",)
+    config.DATASETS.TRAIN = ("./balloon/train",)
     config.DATASETS.TEST = ()
     config.DATALOADER.NUM_WORKERS = 2
     config.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
@@ -73,11 +73,11 @@ def set_train_cfg():
 
 if __name__ == '__main__':
     for d in ["train", "val"]:
-        DatasetCatalog.register("/input/balloon_" + d, lambda d=d: get_balloon_dicts("/input/balloon/" + d))
-        MetadataCatalog.get("/input/balloon_" + d).set(thing_classes=["balloon"])
+        DatasetCatalog.register("./balloon/" + d, lambda d=d: get_balloon_dicts("./balloon/" + d))
+        MetadataCatalog.get("./balloon/" + d).set(thing_classes=["balloon"])
 
     # Train
-    balloon_metadata = MetadataCatalog.get("balloon_train")
+    balloon_metadata = MetadataCatalog.get("./balloon/train")
     cfg = set_train_cfg()
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
     trainer = DefaultTrainer(cfg)
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "model_final.pth")
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7
     predictor = DefaultPredictor(cfg)
-    dataset_dicts = get_balloon_dicts("/input/balloon/val")
+    dataset_dicts = get_balloon_dicts("./balloon/val")
     for d in random.sample(dataset_dicts, 9):
         im = cv2.imread(d["file_name"])
         outputs = predictor(im)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
         image = out.get_image()[:, :, ::-1]
 
     # Evaluate
-    evaluator = COCOEvaluator("/input/balloon_val", cfg, False,
-                              output_dir="/output/")
-    val_loader = build_detection_test_loader(cfg, "/input/balloon_val")
+    evaluator = COCOEvaluator("./balloon/val", cfg, False,
+                              output_dir="./output/")
+    val_loader = build_detection_test_loader(cfg, "./balloon/val")
     print(inference_on_dataset(trainer.model, val_loader, evaluator))
