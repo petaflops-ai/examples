@@ -82,7 +82,6 @@ if __name__ == '__main__':
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
     trainer = DefaultTrainer(cfg)
     trainer.resume_or_load(resume=False)
-    trainer.register_hooks([after_step_hook])
     trainer.train()
 
     # Inference
